@@ -160,8 +160,8 @@ Coimbatore → Tirunelveli: ₹300
 ⚠️ GitHub may not play videos directly due to file size limits.  
 You can **download them** to watch on your device:
 
-- [⬇️ Download Admin App Demo Video](busbook/admin-app/src/demo_vdo/adminApp.mp4)  
-- [⬇️ Download User App Demo Video](busbook/user-app/src/demo_vdo/userApp.mp4)
+- [⬇️ Download Admin App Demo Video](admin-app/src/demo_vdo/adminApp.mp4)  
+- [⬇️ Download User App Demo Video](user-app/src/demo_vdo/userApp.mp4)
 
 
 ```
