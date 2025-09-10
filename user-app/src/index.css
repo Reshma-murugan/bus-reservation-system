@@ -1,0 +1,222 @@
+/* Modern Bus Booking App - Blue Theme Color Palette */
+:root {
+  /* ✅ Primary Blue Palette */
+  --color-primary-bg: #F5FAFF;      /* Light Blue Tint - Background */
+  --color-section-bg: #FAFDFF;      /* White with Blue Tint - Card Surface */
+  --color-primary: #90CAF9;         /* Mild Blue */
+  --color-primary-hover: #64B5F6;   /* Brighter Blue for hover */
+  --color-primary-dark: #1976D2;    /* Primary Dark */
+  --color-primary-light: #E3F2FD;   /* Soft Blue */
+  
+  /* Accent Colors */
+  --color-accent: #42A5F5;          /* Sky Blue */
+  --color-accent-hover: #1E88E5;    /* Deep Blue */
+  --color-cta: #1976D2;             /* Primary Dark for CTA */
+  --color-cta-hover: #1565C0;       /* Darker Blue for CTA hover */
+  
+  /* Text Colors */
+  --color-text-primary: #0D47A1;    /* Navy Blue - Text Primary */
+  --color-text-secondary: #546E7A;  /* Slate Blue - Text Secondary */
+  --color-disabled: #90A4AE;        /* Cool Grayish Blue - Muted Text */
+  
+  /* Status Colors */
+  --color-alert-success: #26C6DA;   /* Teal Blue - Success */
+  --color-alert-error: #F44336;     /* Coral Red - Danger */
+  --color-alert-warning: #FFB300;   /* Warm Yellow - Warning */
+  --color-info: #0288D1;            /* Ocean Blue - Info */
+  
+  /* Legacy Variable Mapping for Compatibility */
+  --soft-white: var(--color-primary-light);
+  --light-gray: #E3F2FD;  /* Lighter shade of primary light */
+  --warm-beige: var(--color-section-bg);
+  --mild-blue: var(--color-primary);
+  --mild-blue-hover: var(--color-primary-hover);
+  --muted-orange: #FFB74D;  /* Orange shade for compatibility */
+  
+  /* Updated Brand Colors */
+  --accent-start: var(--color-primary);
+  --accent-end: var(--color-primary-dark);
+  
+  /* Core Colors - Beach Theme */
+  /* Core Colors */
+  --bg: var(--color-primary-bg);
+  --bg-primary: var(--color-primary-bg);
+  --bg-secondary: var(--color-section-bg);
+  --bg-card: #FFFFFF;  /* Pure white for cards */
+  --bg-glass: rgba(233, 240, 253, 0.9);  /* Light blue tinted glass */
+  --card: #FFFFFF;  /* Pure white for cards */
+  --surface: var(--color-section-bg);
+  --success: var(--color-alert-success);
+  --danger: var(--color-alert-error);
+  --warning: var(--color-alert-warning);
+  --info: var(--color-info);
+  
+  /* Text Colors - Blue Theme */
+  --text-primary: var(--color-text-primary);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-disabled);
+  --text-light: #ffffff;
+  
+  /* Button Colors */
+  --btn-primary: var(--mild-blue);
+  --btn-primary-hover: var(--mild-blue-hover);
+  --btn-accent: var(--muted-orange);
+  --btn-accent-hover: #FF9800;
+  
+  /* Border Radius */
+  --border-radius: 8px;
+  --border-radius-lg: 16px;
+  
+  /* Transitions */
+  --transition: all 0.3s ease;
+  
+  /* Neutral Greys */
+  --grey-50: #f9fafb;
+  --grey-100: #f3f4f6;
+  --grey-200: #e5e7eb;
+  --grey-300: #d1d5db;
+  --grey-400: #9ca3af;
+  --grey-500: #6b7280;
+  --grey-600: #4b5563;
+  --grey-700: #374151;
+  --grey-800: #1f2937;
+  --grey-900: #111827;
+  
+  /* Spacing Scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 300ms ease;
+  
+  /* Typography */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Global Reset */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--color-primary-bg), var(--color-accent)); /* Beach gradient */
+  font-size: 16px;
+  line-height: 1.5;
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
+#root {
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+/* Gradient Text Utility */
+.gradient-text {
+  background: linear-gradient(90deg, var(--accent-start), var(--accent-end));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+}
+
+/* Container Utilities */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--space-4);
+}
+
+.container-sm {
+  max-width: 640px;
+}
+
+.container-md {
+  max-width: 768px;
+}
+
+.container-lg {
+  max-width: 1024px;
+}
+
+/* Responsive Grid */
+.grid {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
+.grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+.grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* Mobile-first responsive breakpoints */
+@media (min-width: 640px) {
+  .sm\\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .sm\\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (min-width: 768px) {
+  .md\\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .md\\:grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .md\\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (min-width: 1024px) {
+  .lg\\:grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+  .lg\\:grid-cols-5 { grid-template-columns: repeat(5, 1fr); }
+}
+
+/* Screen Reader Only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
