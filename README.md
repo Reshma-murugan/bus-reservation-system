@@ -161,10 +161,19 @@ Coimbatore → Tirunelveli: ₹300
 ![User Portal Demo](user-app/src/demo_vdo/userApp.mp4)
 
 
+```
 📂 Project Structure
 busbook/
 ├── admin-app/          # Admin React frontend
+│   ├── src/            # Source files
+│   ├── public/         # Static files
+│   └── package.json    # Dependencies
+│
 ├── user-app/           # User React frontend
+│   ├── src/            # Source files
+│   ├── public/         # Static files
+│   └── package.json    # Dependencies
+│
 ├── backend/            # Spring Boot backend
 │   ├── src/
 │   │   ├── main/
@@ -177,8 +186,12 @@ busbook/
 │   │   │   │   └── service/     # Business logic
 │   │   │   └── resources/
 │   │   │       └── application.properties
-│   └── pom.xml
-└── README.md
+│   └── pom.xml                 # Maven configuration
+│
+├── .gitignore         # Git ignore rules
+├── README.md          # Project documentation
+└── LICENSE           # License file
+```
 
 🧪 Testing
 
