@@ -6,15 +6,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BookingResponseDTO {
-    private Long bookingId;
+    private Long id;
     private String userName;
     private String busName;
-    private String source;
-    private String destination;
-    private String travelDate;
+    private String busType;
+    private String operatorName;
+    private String fromStopName;
+    private String toStopName;
+    private Integer fromSeq;
+    private Integer toSeq;
+    private String journeyDate;
+    private String boardingTime;
     private List<String> seatNumbers;
-    private double totalPrice;
-    private String bookingStatus;
+    private double amount;
+    private String status;
+    private String createdAt;
 
     // ✅ Default Constructor
     public BookingResponseDTO() {
@@ -22,113 +28,73 @@ public class BookingResponseDTO {
 
     // ✅ Constructor from Booking and BusStops
     public BookingResponseDTO(Booking booking, List<BusStop> busStops) {
-        this.bookingId = booking.getId();
+        this.id = booking.getId();
         this.userName = booking.getUser() != null ? booking.getUser().getName() : "Unknown";
         this.busName = booking.getBus() != null ? booking.getBus().getName() : "Unknown Bus";
+        this.busType = booking.getBus() != null ? booking.getBus().getType() : "Standard";
+        this.operatorName = booking.getBus() != null ? booking.getBus().getOperatorName() : "Unknown Operator";
+        this.fromSeq = booking.getFromSeq();
+        this.toSeq = booking.getToSeq();
         
-        // Find source and destination from busStops
+        // Find stops and boarding time
         if (busStops != null && !busStops.isEmpty()) {
-            // Sort bus stops by sequence order
-            busStops.sort((a, b) -> a.getSequenceOrder().compareTo(b.getSequenceOrder()));
-            this.source = busStops.get(0).getStop().getName();
-            this.destination = busStops.get(busStops.size() - 1).getStop().getName();
+            BusStop fromStop = busStops.stream()
+                .filter(bs -> bs.getSequenceOrder().equals(booking.getFromSeq()))
+                .findFirst()
+                .orElse(null);
+            
+            BusStop toStop = busStops.stream()
+                .filter(bs -> bs.getSequenceOrder().equals(booking.getToSeq()))
+                .findFirst()
+                .orElse(null);
+            
+            this.fromStopName = fromStop != null ? fromStop.getStop().getName() : booking.getFromStopName();
+            this.toStopName = toStop != null ? toStop.getStop().getName() : booking.getToStopName();
+            this.boardingTime = fromStop != null && fromStop.getArrivalTime() != null ? fromStop.getArrivalTime().toString() : "N/A";
         } else {
-            this.source = "Unknown";
-            this.destination = "Unknown";
+            this.fromStopName = booking.getFromStopName();
+            this.toStopName = booking.getToStopName();
+            this.boardingTime = "N/A";
         }
         
-        this.travelDate = booking.getJourneyDate() != null ? booking.getJourneyDate().toString() : "";
+        this.journeyDate = booking.getJourneyDate() != null ? booking.getJourneyDate().toString() : "";
         this.seatNumbers = booking.getSeat() != null ? 
             List.of(booking.getSeat().getSeatNumber()) : 
             new ArrayList<>();
-        this.totalPrice = booking.getAmount() != null ? booking.getAmount().doubleValue() : 0.0;
-        this.bookingStatus = "CONFIRMED"; // Default status since Booking entity doesn't have status field
-    }
-
-    // ✅ Parameterized Constructor
-    public BookingResponseDTO(Long bookingId, String userName, String busName, String source, String destination,
-                               String travelDate, List<String> seatNumbers, double totalPrice, String bookingStatus) {
-        this.bookingId = bookingId;
-        this.userName = userName;
-        this.busName = busName;
-        this.source = source;
-        this.destination = destination;
-        this.travelDate = travelDate;
-        this.seatNumbers = seatNumbers;
-        this.totalPrice = totalPrice;
-        this.bookingStatus = bookingStatus;
+        this.amount = booking.getAmount() != null ? booking.getAmount().doubleValue() : 0.0;
+        this.status = booking.getStatus() != null ? booking.getStatus().name() : "CONFIRMED";
+        this.createdAt = booking.getCreatedAt() != null ? booking.getCreatedAt().toString() : "";
     }
 
     // ✅ Getters and Setters
-    public Long getBookingId() {
-        return bookingId;
-    }
-
-    public void setBookingId(Long bookingId) {
-        this.bookingId = bookingId;
-    }
-
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
-
-    public String getBusName() {
-        return busName;
-    }
-
-    public void setBusName(String busName) {
-        this.busName = busName;
-    }
-
-    public String getSource() {
-        return source;
-    }
-
-    public void setSource(String source) {
-        this.source = source;
-    }
-
-    public String getDestination() {
-        return destination;
-    }
-
-    public void setDestination(String destination) {
-        this.destination = destination;
-    }
-
-    public String getTravelDate() {
-        return travelDate;
-    }
-
-    public void setTravelDate(String travelDate) {
-        this.travelDate = travelDate;
-    }
-
-    public List<String> getSeatNumbers() {
-        return seatNumbers;
-    }
-
-    public void setSeatNumbers(List<String> seatNumbers) {
-        this.seatNumbers = seatNumbers;
-    }
-
-    public double getTotalPrice() {
-        return totalPrice;
-    }
-
-    public void setTotalPrice(double totalPrice) {
-        this.totalPrice = totalPrice;
-    }
-
-    public String getBookingStatus() {
-        return bookingStatus;
-    }
-
-    public void setBookingStatus(String bookingStatus) {
-        this.bookingStatus = bookingStatus;
-    }
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
+    public String getBusName() { return busName; }
+    public void setBusName(String busName) { this.busName = busName; }
+    public String getBusType() { return busType; }
+    public void setBusType(String busType) { this.busType = busType; }
+    public String getOperatorName() { return operatorName; }
+    public void setOperatorName(String operatorName) { this.operatorName = operatorName; }
+    public String getFromStopName() { return fromStopName; }
+    public void setFromStopName(String fromStopName) { this.fromStopName = fromStopName; }
+    public String getToStopName() { return toStopName; }
+    public void setToStopName(String toStopName) { this.toStopName = toStopName; }
+    public Integer getFromSeq() { return fromSeq; }
+    public void setFromSeq(Integer fromSeq) { this.fromSeq = fromSeq; }
+    public Integer getToSeq() { return toSeq; }
+    public void setToSeq(Integer toSeq) { this.toSeq = toSeq; }
+    public String getJourneyDate() { return journeyDate; }
+    public void setJourneyDate(String journeyDate) { this.journeyDate = journeyDate; }
+    public String getBoardingTime() { return boardingTime; }
+    public void setBoardingTime(String boardingTime) { this.boardingTime = boardingTime; }
+    public List<String> getSeatNumbers() { return seatNumbers; }
+    public void setSeatNumbers(List<String> seatNumbers) { this.seatNumbers = seatNumbers; }
+    public double getAmount() { return amount; }
+    public void setAmount(double amount) { this.amount = amount; }
+    public String getStatus() { return status; }
+    public void setStatus(String status) { this.status = status; }
+    public String getCreatedAt() { return createdAt; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
 }

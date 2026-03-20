@@ -27,13 +27,13 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5174,
-    open: true,
+    port: 5173,
+    open: false,
     host: 'localhost',
     strictPort: false,
   },
   preview: {
-    port: 5174,
+    port: 5173,
     host: 'localhost',
     strictPort: false,
   },

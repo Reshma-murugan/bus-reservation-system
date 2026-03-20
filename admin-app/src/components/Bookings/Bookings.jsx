@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { BsArrowRepeat, BsPersonFill, BsGeoAltFill, BsTicketDetailed, BsCashStack, BsCalendarCheck, BsClock, BsChevronRight } from 'react-icons/bs';
 import api from '../../utils/api';
+import { formatTimeTo12h, formatDateTimeTo12h } from '../../utils/dateUtils';
 import './Bookings.css';
 
 const Bookings = () => {
@@ -227,8 +229,7 @@ const Bookings = () => {
   };
 
   const formatTime = (timeString) => {
-    if (!timeString) return 'N/A';
-    return timeString;
+    return formatTimeTo12h(timeString);
   };
 
   const updateBookingStatus = async (bookingId, status) => {
@@ -290,84 +291,31 @@ const Bookings = () => {
   return (
     <div className="bookings-container">
       <div className="bookings-header">
-        <h1>Booking Management</h1>
+        <div className="header-title">
+          <h1>Booking Management</h1>
+          <p className="bookings-subtitle">Track tickets, manage cancellations, and monitor travel daily.</p>
+        </div>
         <div className="header-actions">
           <button 
             onClick={fetchBookings} 
             className="btn btn-secondary"
             disabled={loading}
           >
-            {loading ? 'Refreshing...' : '🔄 Refresh'}
+            {loading ? 'Refreshing...' : <><BsArrowRepeat /> Refresh</>}
           </button>
         </div>
       </div>
 
-      {error && (
-        <div className="error-message">
-          {error}
-          <button onClick={fetchBookings} className="btn btn-outline">
-            Try Again
-          </button>
-        </div>
-      )}
-
       <div className="bookings-subnav">
-        <div className="filters">
-          <div className="filters-container">
-            <div className="filter-group">
-              <button 
-                className={`filter-btn ${filter === 'all' ? 'active' : ''}`}
-                onClick={() => setFilter('all')}
-              >
-                All ({counts.all})
-              </button>
-              <button 
-                className={`filter-btn ${filter === 'confirmed' ? 'active' : ''}`}
-                onClick={() => setFilter('confirmed')}
-              >
-                Confirmed ({counts.confirmed})
-              </button>
-              <button 
-                className={`filter-btn ${filter === 'cancelled' ? 'active' : ''}`}
-                onClick={() => setFilter('cancelled')}
-              >
-                Cancelled ({counts.cancelled})
-              </button>
-            </div>
-            <div className="filter-group">
-              <button 
-                className={`filter-btn ${filter === 'today' ? 'active' : ''}`}
-                onClick={() => setFilter('today')}
-              >
-                Today's Bookings ({counts.today})
-              </button>
-              <button 
-                className={`filter-btn ${filter === 'past' ? 'active' : ''}`}
-                onClick={() => setFilter('past')}
-              >
-                Past Bookings ({counts.past})
-              </button>
-            </div>
-            <div className="filter-group">
-              <button 
-                className={`filter-btn ${filter === 'journey-today' ? 'active' : ''}`}
-                onClick={() => setFilter('journey-today')}
-              >
-                Journey Today ({counts['journey-today']})
-              </button>
-              <button 
-                className={`filter-btn ${filter === 'past-journeys' ? 'active' : ''}`}
-                onClick={() => setFilter('past-journeys')}
-              >
-                Past Journeys ({counts['past-journeys']})
-              </button>
-              <button 
-                className={`filter-btn ${filter === 'future-journeys' ? 'active' : ''}`}
-                onClick={() => setFilter('future-journeys')}
-              >
-                Future Journeys ({counts['future-journeys']})
-              </button>
-            </div>
+        <div className="filters-container">
+          <div className="filter-group">
+            <button className={`filter-btn ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>All ({counts.all})</button>
+            <button className={`filter-btn ${filter === 'confirmed' ? 'active' : ''}`} onClick={() => setFilter('confirmed')}>Confirmed ({counts.confirmed})</button>
+            <button className={`filter-btn ${filter === 'cancelled' ? 'active' : ''}`} onClick={() => setFilter('cancelled')}>Cancelled ({counts.cancelled})</button>
+          </div>
+          <div className="filter-group">
+            <button className={`filter-btn ${filter === 'today' ? 'active' : ''}`} onClick={() => setFilter('today')}>Today ({counts.today})</button>
+            <button className={`filter-btn ${filter === 'journey-today' ? 'active' : ''}`} onClick={() => setFilter('journey-today')}>Journey Today ({counts['journey-today']})</button>
           </div>
         </div>
       </div>
@@ -380,51 +328,73 @@ const Bookings = () => {
         ) : (
           filteredBookings.map(booking => (
             <div key={booking.id} className="booking-card">
-              <div className="booking-header">
-                <div className="booking-id">
-                  <strong>Booking #{booking.id}</strong>
-                  {getStatusBadge(booking.status)}
+              <div className="booking-card-header">
+                <div className="booking-id-group">
+                  <div className="booking-icon-main"><BsTicketDetailed /></div>
+                  <div className="id-details">
+                    <span className="booking-id">#BOOK-{booking.id}</span>
+                    {getStatusBadge(booking.status)}
+                  </div>
                 </div>
-                <div className="booking-date">
-                  {formatDate(booking.bookingDate)}
-                </div>
-              </div>
-
-              <div className="booking-details">
-                <div className="customer-info">
-                  <h4>Customer Information</h4>
-                  <p><strong>Name:</strong> {booking.user?.firstName || 'N/A'}</p>
-                  <p><strong>Email:</strong> {booking.user?.email || 'N/A'}</p>
-                  <p><strong>Phone:</strong> {booking.user?.phoneNumber || 'N/A'}</p>
-                </div>
-
-                <div className="trip-info">
-                  <h4>Trip Information</h4>
-                  <p><strong>Bus:</strong> {booking.tripDate?.bus?.name || 'N/A'} {booking.tripDate?.bus?.type ? `(${booking.tripDate.bus.type})` : ''}</p>
-                  <p><strong>Operator:</strong> {booking.tripDate?.bus?.operatorName || 'N/A'}</p>
-                  <p><strong>Travel Date:</strong> {formatDate(booking.journeyDate)}</p>
-                  <p><strong>From:</strong> {booking.fromStop?.name || 'N/A'}</p>
-                  <p><strong>To:</strong> {booking.toStop?.name || 'N/A'}</p>
-                  <p><strong>Departure:</strong> {formatTime(booking.fromStop?.arrivalTime)}</p>
-                  <p><strong>Arrival:</strong> {formatTime(booking.toStop?.arrivalTime)}</p>
-                </div>
-
-                <div className="seat-info">
-                  <h4>Seat & Payment</h4>
-                  <p><strong>Seats:</strong> {Array.isArray(booking.seats) && booking.seats.length > 0 
-                    ? booking.seats.map(seat => seat.seatNumber).join(', ')
-                    : 'N/A'}</p>
-                  <p><strong>Total Amount:</strong> ₹{booking.totalAmount || '0.00'}</p>
-                  <p><strong>Payment Status:</strong> {booking.status === 'CANCELLED' ? 'Refunded' : 'Paid'}</p>
+                <div className="booking-timestamp">
+                  <BsClock /> {formatDateTimeTo12h(booking.bookingDate)}
                 </div>
               </div>
 
-              <div className="booking-actions">
-                <div className="status-display">
-                  <strong>Status: </strong>
-                  <span className={`status-badge ${booking.status === 'CANCELLED' ? 'status-cancelled' : 'status-confirmed'}`}>
-                    {booking.status === 'CANCELLED' ? 'Cancelled' : 'Confirmed'}
-                  </span>
+              <div className="booking-grid">
+                <div className="info-section">
+                  <div className="section-header">
+                    <BsPersonFill className="section-icon" />
+                    <h4>Passenger Details</h4>
+                  </div>
+                  <div className="info-content">
+                    <div className="info-row">
+                      <span className="info-label">Name</span>
+                      <span className="info-value">{booking.user?.firstName || 'Guest'}</span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Phone</span>
+                      <span className="info-value">{booking.user?.phoneNumber || 'N/A'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="info-section">
+                  <div className="section-header">
+                    <BsGeoAltFill className="section-icon" />
+                    <h4>Trip Journey</h4>
+                  </div>
+                  <div className="info-content">
+                    <div className="info-row">
+                      <span className="info-label">Route</span>
+                      <span className="info-value route-text">
+                        {booking.fromStop?.name} <BsChevronRight className="path-arrow" /> {booking.toStop?.name}
+                      </span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Date</span>
+                      <span className="info-value">{formatDate(booking.journeyDate)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="info-section">
+                  <div className="section-header">
+                    <BsCashStack className="section-icon" />
+                    <h4>Payment & Seats</h4>
+                  </div>
+                  <div className="info-content">
+                    <div className="info-row">
+                      <span className="info-label">Seats</span>
+                      <span className="info-value seats-list">
+                        {booking.seats?.map(s => s.seatNumber).join(', ') || 'N/A'}
+                      </span>
+                    </div>
+                    <div className="info-row">
+                      <span className="info-label">Total Amount</span>
+                      <span className="info-value price-text">₹{booking.totalAmount}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

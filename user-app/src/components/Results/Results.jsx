@@ -1,33 +1,20 @@
-import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { MdEventSeat, MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md';
 import './Results.css';
+import BusDetails from '../BusDetails/BusDetails';
+import { formatTimeTo12h } from '../../utils/dateUtils';
 
 const Results = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { results = [], searchParams } = location.state || {};
+  const [expandedBusId, setExpandedBusId] = useState(null);
 
-  // Debug logging for Results component
-  console.log('Results component - received data:', {
-    results,
-    searchParams,
-    resultsLength: results.length,
-    firstBus: results[0]
-  });
-
-  // Log each bus's totalPrice specifically
-  results.forEach((bus, index) => {
-    console.log(`Bus ${index}:`, {
-      busId: bus.busId,
-      busName: bus.busName,
-      totalPrice: bus.totalPrice,
-      totalPriceType: typeof bus.totalPrice,
-      fullBusObject: bus
-    });
-  });
-
-  const handleBackToSearch = () => {
-    navigate('/');
+  const getSeatAvailabilityStyle = (count) => {
+    if (count <= 5) return { text: `Only ${count} seats left!`, className: 'seats-critical' };
+    if (count <= 10) return { text: `${count} seats remaining`, className: 'seats-low' };
+    return { text: 'Available', className: 'seats-available' };
   };
 
   const formatDuration = (departureTime, arrivalTime) => {
@@ -38,7 +25,6 @@ const Results = () => {
       let depTotalMinutes = depHours * 60 + depMinutes;
       let arrTotalMinutes = arrHours * 60 + arrMinutes;
       
-      // Handle next day arrival
       if (arrTotalMinutes < depTotalMinutes) {
         arrTotalMinutes += 24 * 60;
       }
@@ -53,14 +39,20 @@ const Results = () => {
     }
   };
 
+  const toggleSeats = (busId) => {
+    setExpandedBusId(expandedBusId === busId ? null : busId);
+  };
+
   return (
     <div className="results">
       <div className="results-header">
+        <button onClick={() => navigate('/')} className="back-btn-results">← Back to Search</button>
         <h2>Available Buses</h2>
         {searchParams && (
           <div className="search-info">
-            <strong>{searchParams.from} → {searchParams.to}</strong>
-            <span>{new Date(searchParams.date).toLocaleDateString()}</span>
+            <span className="info-route">{searchParams.from} → {searchParams.to}</span>
+            <span className="info-separator">•</span>
+            <span className="info-date">{new Date(searchParams.date).toLocaleDateString('en-GB')}</span>
           </div>
         )}
         <div className="results-count">
@@ -72,52 +64,67 @@ const Results = () => {
         <div className="no-buses">
           <h3>No buses found</h3>
           <p>Sorry, no buses are available for your selected route and date.</p>
-          <Link to="/" className="search-again-btn">
+          <button onClick={() => navigate('/')} className="search-again-btn">
             ← Search Again
-          </Link>
+          </button>
         </div>
       ) : (
         <div className="bus-list">
           {results.map(bus => (
-            <div key={bus.busId} className="bus-card">
-              <div className="bus-card-header">
-                <h3>{bus.busName}</h3>
-                <div className="fare-badge">₹{bus.totalPrice}</div>
-              </div>
-              
-              <div className="bus-info">
-                <p>
+            <div key={bus.busId} className={`bus-card-wrapper ${expandedBusId === bus.busId ? 'is-expanded' : ''}`}>
+              <div className="bus-card horizontal-card">
+                <div className="bus-details-left">
+                  <h3 className="bus-name">{bus.busName}</h3>
                   <span className="bus-type-badge">{bus.busType}</span>
-                </p>
-                <p>Operator: {bus.operatorName}</p>
-                <p>Available Seats: {bus.availableSeats}</p>
+                  <p className="operator-text">Operator: {bus.operatorName}</p>
+                  <div className={`seat-badge ${getSeatAvailabilityStyle(bus.availableSeats).className}`}>
+                    <MdEventSeat className="seat-icon-md" />
+                    <span>{getSeatAvailabilityStyle(bus.availableSeats).text}</span>
+                  </div>
+                </div>
+                
+                <div className="journey-timeline">
+                  <div className="time-col">
+                    <span className="time">{formatTimeTo12h(bus.departureTime)}</span>
+                    <span className="location">{searchParams?.from}</span>
+                  </div>
+                  <div className="duration-col">
+                    <span className="duration-text">{formatDuration(bus.departureTime, bus.arrivalTime)}</span>
+                    <div className="duration-line"></div>
+                  </div>
+                  <div className="time-col">
+                    <span className="time">{formatTimeTo12h(bus.arrivalTime)}</span>
+                    <span className="location">{searchParams?.to}</span>
+                  </div>
+                </div>
+                
+                <div className="action-right">
+                  <div className="price-display">
+                    <span className="currency">₹</span>
+                    <span className="amount">{bus.totalPrice}</span>
+                  </div>
+                  <button 
+                    onClick={() => toggleSeats(bus.busId)}
+                    className={`view-seats-btn ${expandedBusId === bus.busId ? 'active' : ''}`}
+                  >
+                    {expandedBusId === bus.busId ? (
+                      <>Hide Seats <MdKeyboardArrowUp /></>
+                    ) : (
+                      <>View Seats <MdKeyboardArrowDown /></>
+                    )}
+                  </button>
+                </div>
               </div>
               
-              <div className="journey-time">
-                <div className="time-point">
-                  <span className="time">{bus.departureTime}</span>
-                  <span className="location">{searchParams?.from}</span>
+              {expandedBusId === bus.busId && (
+                <div className="inline-seat-selection">
+                  <BusDetails 
+                    isEmbedded={true} 
+                    bus={bus} 
+                    date={searchParams?.date} 
+                  />
                 </div>
-                <div className="journey-duration">
-                  {formatDuration(bus.departureTime, bus.arrivalTime)}
-                </div>
-                <div className="time-point">
-                  <span className="time">{bus.arrivalTime}</span>
-                  <span className="location">{searchParams?.to}</span>
-                </div>
-              </div>
-              
-              <Link 
-                to={`/bus/${bus.busId}`} 
-                className="view-details"
-                state={{ 
-                  bus, 
-                  searchParams,
-                  date: searchParams?.date 
-                }}
-              >
-                Select Seats
-              </Link>
+              )}
             </div>
           ))}
         </div>

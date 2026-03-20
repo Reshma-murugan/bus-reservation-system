@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { MdAccountCircle } from 'react-icons/md';
 import './Navbar.css';
 
 const Navbar = () => {
@@ -9,6 +10,24 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef(null);
+
+  const [scrolled, setScrolled] = useState(false);
+
+  // Handle scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 20) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
   // Close profile dropdown when clicking outside
   useEffect(() => {
@@ -47,92 +66,94 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar ${scrolled ? 'scrolled' : ''}`}>
       <div className="navbar-container">
-        {/* Logo */}
-        <Link to="/" className="navbar-logo" onClick={closeMenu}>
-          <span className="logo-icon">🚌</span>
-          <span className="logo-text">BusBook</span>
-        </Link>
+        <div className="navbar-spacer"></div> {/* Placeholder for alignment if needed */}
 
-        {/* Desktop Navigation */}
-        <div className="navbar-menu">
-          <Link 
-            to="/" 
-            className={`navbar-link ${isActive('/') ? 'active' : ''}`}
-          >
-            <span>🏠</span>
-            Home
-          </Link>
-          
-          {isAuthenticated() && (
+        {/* Right Group: Menu, Auth, and Toggle */}
+        <div className="navbar-right-group">
+          {/* Desktop Navigation */}
+          <div className="navbar-menu">
             <Link 
-              to="/my-bookings" 
-              className={`navbar-link ${isActive('/my-bookings') ? 'active' : ''}`}
+              to="/" 
+              className={`navbar-link ${isActive('/') ? 'active' : ''}`}
             >
-              <span>📋</span>
-              My Bookings
+              home
             </Link>
-          )}
-        </div>
+            
+            {isAuthenticated() && (
+              <Link 
+                to="/my-bookings" 
+                className={`navbar-link ${isActive('/my-bookings') ? 'active' : ''}`}
+              >
+                bookings
+              </Link>
+            )}
 
-        {/* Auth Section */}
-        <div className="navbar-auth">
-          {isAuthenticated() ? (
-            <div className="user-menu" ref={profileDropdownRef}>
-              <div className="profile-icon" onClick={toggleProfileDropdown}>
-                <div className="user-avatar">
-                  {user?.email?.charAt(0).toUpperCase() || 'U'}
+            <Link 
+              to="#" 
+              className="navbar-link"
+            >
+              Contact
+            </Link>
+          </div>
+
+          {/* Auth Section */}
+          <div className="navbar-auth">
+            {isAuthenticated() ? (
+              <div className="user-menu" ref={profileDropdownRef}>
+                <div className="profile-icon" onClick={toggleProfileDropdown}>
+                  <MdAccountCircle className="user-icon" />
                 </div>
-              </div>
-              
-              {isProfileDropdownOpen && (
-                <div className="profile-dropdown">
-                  <div className="profile-dropdown-header">
-                    <div className="user-avatar-large">
-                      {user?.email?.charAt(0).toUpperCase() || 'U'}
+                
+                {isProfileDropdownOpen && (
+                  <div className="profile-dropdown">
+                    <div className="profile-dropdown-header">
+                      <div className="user-avatar-large">
+                        {user?.email?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div className="user-details">
+                        <div className="user-name">{user?.name || 'User'}</div>
+                        <div className="user-email">{user?.email}</div>
+                      </div>
                     </div>
-                    <div className="user-details">
-                      <div className="user-name">{user?.name || 'User'}</div>
-                      <div className="user-email">{user?.email}</div>
-                    </div>
+                    <div className="profile-dropdown-divider"></div>
+                    <button className="dropdown-logout-btn" onClick={handleLogout}>
+                      <i className="fas fa-sign-out-alt"></i>
+                      Logout
+                    </button>
                   </div>
-                  <div className="profile-dropdown-divider"></div>
-                  <button className="dropdown-logout-btn" onClick={handleLogout}>
-                    <i className="fas fa-sign-out-alt"></i>
-                    Logout
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="auth-buttons">
-              <Link 
-                to="/login" 
-                className={`auth-btn login-btn ${isActive('/login') ? 'active' : ''}`}
-              >
-                Sign In
-              </Link>
-              <Link 
-                to="/register" 
-                className={`auth-btn register-btn ${isActive('/register') ? 'active' : ''}`}
-              >
-                Sign Up
-              </Link>
-            </div>
-          )}
-        </div>
+                )}
+              </div>
+            ) : (
+              <div className="auth-buttons">
+                <Link 
+                  to="/login" 
+                  className={`navbar-link ${isActive('/login') ? 'active' : ''}`}
+                >
+                  login
+                </Link>
+                <Link 
+                  to="/register" 
+                  className={`navbar-link ${isActive('/register') ? 'active' : ''}`}
+                >
+                  register
+                </Link>
+              </div>
+            )}
+          </div>
 
-        {/* Mobile Menu Toggle */}
-        <button 
-          className={`mobile-toggle ${isMenuOpen ? 'active' : ''}`}
-          onClick={toggleMenu}
-          aria-label="Toggle menu"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
+          {/* Mobile Menu Toggle */}
+          <button 
+            className={`mobile-toggle ${isMenuOpen ? 'active' : ''}`}
+            onClick={toggleMenu}
+            aria-label="Toggle menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu */}
@@ -143,8 +164,7 @@ const Navbar = () => {
             className={`mobile-link ${isActive('/') ? 'active' : ''}`}
             onClick={closeMenu}
           >
-            <span>🏠</span>
-            Home
+            home
           </Link>
           
           {isAuthenticated() ? (
@@ -154,14 +174,11 @@ const Navbar = () => {
                 className={`mobile-link ${isActive('/my-bookings') ? 'active' : ''}`}
                 onClick={closeMenu}
               >
-                <span>📋</span>
-                My Bookings
+                bookings
               </Link>
               <div className="mobile-user-section">
                 <div className="mobile-user-info">
-                  <div className="mobile-user-avatar">
-                    {user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </div>
+                  <MdAccountCircle className="mobile-user-icon" />
                   <div className="mobile-user-details">
                     <div className="mobile-user-name">{user?.name || 'User'}</div>
                     <div className="mobile-user-email">{user?.email}</div>
@@ -180,16 +197,14 @@ const Navbar = () => {
                 className={`mobile-link ${isActive('/login') ? 'active' : ''}`}
                 onClick={closeMenu}
               >
-                <span>🔑</span>
-                Sign In
+                login
               </Link>
               <Link 
                 to="/register" 
                 className={`mobile-link ${isActive('/register') ? 'active' : ''}`}
                 onClick={closeMenu}
               >
-                <span>✨</span>
-                Sign Up
+                register
               </Link>
             </>
           )}

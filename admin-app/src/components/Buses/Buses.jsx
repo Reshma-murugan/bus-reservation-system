@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api from '../../utils/api';
+import { BsArrowRepeat, BsPlusLg, BsRecordCircleFill, BsPencilSquare, BsTrash } from 'react-icons/bs';
 import './Buses.css';
 
 const Buses = () => {
@@ -15,7 +16,7 @@ const Buses = () => {
 
   // Refresh when coming back from other pages
   useEffect(() => {
-    if (location.pathname === '/buses') {
+    if (location.pathname === '/admin/buses') {
       fetchBuses();
     }
   }, [location.pathname]);
@@ -68,41 +69,34 @@ const Buses = () => {
   return (
     <div className="buses-container">
       <div className="buses-header">
-        <h1>Bus Management</h1>
+        <div className="header-title">
+          <h1>Bus Management</h1>
+          <p className="buses-subtitle">Manage your fleet, routes, and active service status.</p>
+        </div>
         <div className="header-actions">
           <button 
             onClick={fetchBuses} 
             className="btn btn-secondary"
             disabled={loading}
           >
-            {loading ? 'Refreshing...' : '🔄 Refresh'}
+            {loading ? 'Refreshing...' : <><BsArrowRepeat /> Refresh</>}
           </button>
-          <Link to="/buses/new" className="btn btn-primary">
-            ➕ Add New Bus
+          <Link to="/admin/buses/new" className="btn btn-primary">
+            <BsPlusLg /> Add New Bus
           </Link>
         </div>
       </div>
-
-      {error && (
-        <div className="error-message">
-          {error}
-          <button onClick={fetchBuses} className="btn btn-outline">
-            Try Again
-          </button>
-        </div>
-      )}
 
       <div className="buses-grid">
         {!Array.isArray(buses) || buses.length === 0 ? (
           <div className="no-buses">
             <p>No buses found. Add your first bus!</p>
-            <Link to="/buses/new" className="btn btn-primary">
+            <Link to="/admin/buses/new" className="btn btn-primary">
               Add Bus
             </Link>
           </div>
         ) : (
           buses.map(bus => {
-            // Extract complete route from bus stops
             const busStops = bus.busStops || [];
             const sortedStops = busStops.sort((a, b) => a.sequenceOrder - b.sequenceOrder);
             const completeRoute = sortedStops.length > 0 
@@ -111,27 +105,47 @@ const Buses = () => {
             
             return (
               <div key={bus.id} className="bus-card">
-                <div className="bus-info">
-                  <h3>{completeRoute}</h3>
-                  <p><strong>Bus:</strong> {bus.name}</p>
-                  <p><strong>Type:</strong> {bus.type}</p>
-                  <p><strong>Capacity:</strong> {bus.capacity} seats</p>
-                  <p><strong>Operator:</strong> {bus.operatorName}</p>
-                  <p><strong>Stops:</strong> {bus.busStops?.length || 0} stops</p>
-                  <p><strong>Status:</strong> {bus.active ? 'Active' : 'Inactive'}</p>
+                <div className="bus-main-info">
+                  <div className="bus-title-group">
+                    <span className="bus-operator">{bus.operatorName}</span>
+                    <h3>{completeRoute}</h3>
+                  </div>
+                  <span className="bus-status-badge">
+                    {bus.active ? <><BsRecordCircleFill style={{marginRight: '6px'}}/> Active</> : <><BsRecordCircleFill style={{marginRight: '6px', opacity: 0.5}}/> Inactive</>}
+                  </span>
                 </div>
+
+                <div className="bus-details-grid">
+                  <div className="detail-item">
+                    <span className="detail-label">Bus Name</span>
+                    <span className="detail-value">{bus.name}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Type</span>
+                    <span className="detail-value">{bus.type}</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Capacity</span>
+                    <span className="detail-value">{bus.capacity} Seats</span>
+                  </div>
+                  <div className="detail-item">
+                    <span className="detail-label">Stops</span>
+                    <span className="detail-value">{bus.busStops?.length || 0} Points</span>
+                  </div>
+                </div>
+
                 <div className="bus-actions">
                   <Link 
-                    to={`/buses/edit/${bus.id}`} 
-                    className="btn btn-secondary"
+                    to={`/admin/buses/${bus.id}/edit`} 
+                    className="btn btn-edit"
                   >
-                    Edit
+                    <BsPencilSquare /> Edit Details
                   </Link>
                   <button 
                     onClick={() => deleteBus(bus.id)}
                     className="btn btn-danger"
                   >
-                    Delete
+                    <BsTrash /> Delete
                   </button>
                 </div>
               </div>

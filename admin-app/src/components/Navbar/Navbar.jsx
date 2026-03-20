@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { BsBusFrontFill, BsGrid1X2Fill, BsCalendar, BsTicketDetailed, BsPlusLg, BsBoxArrowRight } from 'react-icons/bs';
 import './Navbar.css';
 
 const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const { isAuthenticated, logout, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Handle scroll for glass effect
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -57,8 +68,28 @@ const Navbar = () => {
     return null;
   }
 
+  const navItems = [
+    { to: '/admin/dashboard', label: 'Dashboard', icon: <BsGrid1X2Fill />, activeRule: (path) => path === '/admin/dashboard' },
+    { to: '/admin/buses', label: 'Buses', icon: <BsBusFrontFill />, activeRule: (path) => path.startsWith('/admin/buses') && path !== '/admin/buses/new' },
+    { 
+      to: '/admin/todays-buses', 
+      label: "Today's Buses", 
+      icon: (
+        <span style={{ position: 'relative', display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+          <BsCalendar />
+          <span style={{ position: 'absolute', top: '55%', left: '50%', transform: 'translate(-50%, -50%)', fontSize: '0.45em', fontWeight: 'bold' }}>
+            {new Date().getDate()}
+          </span>
+        </span>
+      ),
+      activeRule: (path) => path === '/admin/todays-buses' 
+    },
+    { to: '/admin/bookings', label: 'Bookings', icon: <BsTicketDetailed />, activeRule: (path) => path === '/admin/bookings' },
+    { to: '/admin/buses/new', label: 'Add Bus', icon: <BsPlusLg />, activeRule: (path) => path === '/admin/buses/new' },
+  ];
+
   return (
-    <nav className="navbar">
+    <nav className={`navbar ${scrolled || isMobileMenuOpen ? 'scrolled' : ''}`}>
       <div className="navbar-container">
         <div className="navbar-left">
           <button 
@@ -71,16 +102,30 @@ const Navbar = () => {
             <div className="hamburger-line"></div>
             <div className="hamburger-line"></div>
           </button>
+
+          <Link to="/admin/dashboard" className="navbar-logo">
+            <div className="logo-icon"><BsBusFrontFill /></div>
+            <div className="logo-text-container">
+              <span className="logo-text">BusBook</span>
+              <span className="logo-subtext">Admin</span>
+            </div>
+          </Link>
         </div>
         
         <div className="navbar-center">
-          <Link to="/admin/dashboard" className="navbar-logo">
-            <div className="logo-icon">🚌</div>
-            <div className="logo-text-container">
-              <span className="logo-text">BusBook</span>
-              <span className="logo-subtext">Admin Dashboard</span>
-            </div>
-          </Link>
+          {/* Desktop Navigation */}
+          <ul className="navbar-menu-desktop">
+            {navItems.map((item) => (
+              <li key={item.to} className="navbar-item">
+                <Link 
+                  to={item.to} 
+                  className={`navbar-link ${item.activeRule(location.pathname) ? 'active' : ''}`}
+                >
+                  <span>{item.icon}</span> {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
         
         <div className="navbar-right">
@@ -97,7 +142,7 @@ const Navbar = () => {
                   <span className="user-avatar">
                     {user?.email ? user.email.charAt(0).toUpperCase() : 'U'}
                   </span>
-                  <span className="user-email">Profile</span>
+                  <span className="user-email">{user?.name || 'Account'}</span>
                   <span className={`dropdown-arrow ${isUserMenuOpen ? 'up' : 'down'}`}>▼</span>
                 </button>
                 
@@ -117,7 +162,7 @@ const Navbar = () => {
                       className="dropdown-item"
                       onClick={handleLogout}
                     >
-                      <span className="icon">🚪</span> Logout
+                      <span className="icon"><BsBoxArrowRight /></span> Logout
                     </button>
                   </div>
                 )}
@@ -126,53 +171,19 @@ const Navbar = () => {
           )}
         </div>
         
-        {/* Mobile Navigation */}
-        <ul className={`navbar-menu ${isMobileMenuOpen ? 'active' : ''}`}>
-          <li className="navbar-item">
-            <Link 
-              to="/admin/dashboard" 
-              className={`navbar-link ${location.pathname === '/admin/dashboard' ? 'active' : ''}`}
-              onClick={closeAllMenus}
-            >
-              <span>📊</span> Dashboard
-            </Link>
-          </li>
-          <li className="navbar-item">
-            <Link 
-              to="/admin/buses" 
-              className={`navbar-link ${location.pathname.startsWith('/admin/buses') ? 'active' : ''}`}
-              onClick={closeAllMenus}
-            >
-              <span>🚌</span> Buses
-            </Link>
-          </li>
-          <li className="navbar-item">
-            <Link 
-              to="/admin/todays-buses" 
-              className={`navbar-link ${location.pathname === '/admin/todays-buses' ? 'active' : ''}`}
-              onClick={closeAllMenus}
-            >
-              <span>📅</span> Today's Buses
-            </Link>
-          </li>
-          <li className="navbar-item">
-            <Link 
-              to="/admin/bookings" 
-              className={`navbar-link ${location.pathname === '/admin/bookings' ? 'active' : ''}`}
-              onClick={closeAllMenus}
-            >
-              <span>🎫</span> Bookings
-            </Link>
-          </li>
-          <li className="navbar-item">
-            <Link 
-              to="/admin/buses/new" 
-              className={`navbar-link ${location.pathname === '/admin/buses/new' ? 'active' : ''}`}
-              onClick={closeAllMenus}
-            >
-              <span>➕</span> Add Bus
-            </Link>
-          </li>
+        {/* Mobile Navigation (Slide out) */}
+        <ul className={`navbar-menu-mobile ${isMobileMenuOpen ? 'active' : ''}`}>
+          {navItems.map((item) => (
+            <li key={item.to} className="navbar-item">
+              <Link 
+                to={item.to} 
+                className={`navbar-link ${item.activeRule(location.pathname) ? 'active' : ''}`}
+                onClick={closeAllMenus}
+              >
+                <span>{item.icon}</span> {item.label}
+              </Link>
+            </li>
+          ))}
         </ul>
         
         {/* Mobile Menu Overlay */}

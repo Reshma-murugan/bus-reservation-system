@@ -1,153 +1,146 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../utils/api';
-import 'bootstrap-icons/font/bootstrap-icons.css';
+import { FaEye, FaEyeSlash, FaEnvelope, FaLock, FaBus } from 'react-icons/fa';
 import './Login.css';
 
 function Login() {
   const location = useLocation();
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState(location.state?.message || '');
-  const [loading, setLoading] = useState(false);
-  // Password visibility toggle removed
-  const { login } = useAuth();
+  const [successMessage] = useState(location.state?.message || '');
+  const [showPassword, setShowPassword] = useState(false);
+  const { login, loading } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
-
     try {
-      const response = await api.post('/auth/login', formData);
-      
-      if (response.data.role === 'ADMIN') {
-        login(response.data);
-      } else {
-        setError('Access denied. Admin role required.');
-      }
+      await login(formData.email, formData.password);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Login failed');
-    } finally {
-      setLoading(false);
+      setError(err.message || 'Login failed. Please try again.');
     }
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   return (
-    <div>
-      {/* Floating test button */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '20px',
-          right: '20px',
-          padding: '15px 25px',
-          backgroundColor: 'red',
-          color: 'white',
-          fontSize: '18px',
-          fontWeight: 'bold',
-          zIndex: 1000,
-          borderRadius: '5px',
-          boxShadow: '0 4px 8px rgba(0,0,0,0.2)',
-        }}
-      >
-        TEST BUTTON - CLICK ME
-      </div>
+    <div className="login-container">
+      <div className="login-card">
 
-      <div className="login-container">
-        <div className="login-card">
-          <div className="login-header">
-            <h1>Admin Login</h1>
-            <p>Bus Reservation System</p>
-            <div
-              style={{
-                padding: '15px',
-                margin: '15px 0',
-                background: '#ffeb3b',
-                border: '2px solid #f44336',
-                borderRadius: '8px',
-                textAlign: 'center',
-                fontWeight: 'bold',
-                fontSize: '16px',
-                color: '#000',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '10px',
-              }}
-            >
-              <i
-                className="bi bi-eye-fill"
-                style={{ fontSize: '24px', color: '#f44336' }}
-              ></i>
-              <span>TEST ICON - This should be visible</span>
+        {/* ── Left Brand Panel ── */}
+        <div className="login-brand">
+          <div className="brand-logo">
+            <div className="brand-logo-icon">
+              <FaBus color="white" />
             </div>
+            <div className="brand-logo-text">
+              Bus<span>Book</span>
+            </div>
+          </div>
+
+          <div className="brand-tagline">
+            <h2>Fleet Control, Simplified.</h2>
+            <p>Manage your entire bus network from one powerful dashboard.</p>
+          </div>
+
+          <div className="brand-features">
+            <div className="brand-feature">
+              <div className="brand-feature-dot" />
+              Real-time seat & booking management
+            </div>
+            <div className="brand-feature">
+              <div className="brand-feature-dot" />
+              Live route and schedule control
+            </div>
+            <div className="brand-feature">
+              <div className="brand-feature-dot" />
+              Instant revenue insights
+            </div>
+          </div>
+        </div>
+
+        {/* ── Right Form Panel ── */}
+        <div className="login-form-panel">
+          <div className="login-header">
+            <h1>Welcome back</h1>
+            <p>Sign in to your admin portal</p>
           </div>
 
           <form onSubmit={handleSubmit} className="login-form">
             {successMessage && (
-              <div className="success-message">{successMessage}</div>
+              <div className="success-message">✓ {successMessage}</div>
             )}
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+              <div className="error-message">⚠ {error}</div>
+            )}
 
             <div className="form-group">
-              <label className="form-label">Email</label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                className="form-input"
-                autoComplete="email"
-                required
-              />
+              <label htmlFor="email">Email Address</label>
+              <div className="input-wrapper">
+                <span className="input-icon"><FaEnvelope /></span>
+                <input
+                  id="email"
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  className="form-input"
+                  autoComplete="email"
+                  required
+                  placeholder="admin@busbook.com"
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             <div className="form-group">
-              <label className="form-label">Password</label>
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                className="form-input"
-                autoComplete="current-password"
-                required
-              />
+              <label htmlFor="password">Password</label>
+              <div className="input-wrapper password-input-container">
+                <span className="input-icon"><FaLock /></span>
+                <input
+                  id="password"
+                  type={showPassword ? 'text' : 'password'}
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  className="form-input"
+                  autoComplete="current-password"
+                  required
+                  placeholder="••••••••"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  disabled={loading}
+                >
+                  {showPassword ? <FaEyeSlash /> : <FaEye />}
+                </button>
+              </div>
             </div>
 
-            <button
-              type="submit"
-              className="btn btn-primary btn-full"
-              disabled={loading}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
+            <button type="submit" className="btn-full" disabled={loading}>
+              {loading && <span className="loading-spinner" />}
+              {loading ? 'Signing in…' : 'Sign In'}
             </button>
           </form>
 
           <div className="login-footer">
-            <p>
-              Don't have an admin account?{' '}
-              <Link to="/signup" className="signup-link">
-                Create one here
-              </Link>
-            </p>
+            New admin?
+            <Link to="/admin/register" className="signup-link">
+              Create Account
+            </Link>
           </div>
-        </div> {/* close login-card */}
-      </div> {/* close login-container */}
-    </div>   
+        </div>
+
+      </div>
+    </div>
   );
-};
+}
 
 export default Login;

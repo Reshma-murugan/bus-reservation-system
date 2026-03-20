@@ -310,9 +310,10 @@ public class UserService {
     /**
      * Retrieves all bookings for a user with proper status handling
      * @param userEmail The email of the user
-     * @return List of bookings with their current status
+     * @return List of booking DTOs with their current status and journey info
      */
-    public List<Booking> getUserBookings(String userEmail) {
+    @Transactional(readOnly = true)
+    public List<com.busreservation.dto.BookingResponseDTO> getUserBookings(String userEmail) {
         if (userEmail == null || userEmail.isBlank()) {
             throw new IllegalArgumentException("User email cannot be empty");
         }
@@ -332,86 +333,35 @@ public class UserService {
             // Sort bookings by journey date descending
             bookings.sort(Comparator.comparing(Booking::getJourneyDate).reversed());
             
-            // Process each booking to set additional information and handle status
+            List<com.busreservation.dto.BookingResponseDTO> results = new ArrayList<>();
+            
+            // Process each booking to convert to DTO
             for (Booking booking : bookings) {
                 if (booking == null) {
                     continue;
                 }
                 
                 try {
-                    // Refund status checks removed
-                    
-                    if (booking.getBus() == null) {
-                        System.err.println("WARN: Booking " + booking.getId() + " has no associated bus");
-                        continue;
+                    // Find bus stops for this booking's bus to populate DTO fully
+                    List<BusStop> stops = new ArrayList<>();
+                    if (booking.getBus() != null) {
+                        stops = busStopRepository.findByBusIdOrderBySequenceOrder(booking.getBus().getId());
                     }
                     
-                    if (booking.getFromSeq() == null || booking.getToSeq() == null) {
-                        System.err.println("WARN: Booking " + booking.getId() + " has missing sequence numbers");
-                        continue;
-                    }
-                    
-                    // Find bus stops for this booking's bus
-                    List<BusStop> stops = busStopRepository.findByBusIdOrderBySequenceOrder(booking.getBus().getId());
-                    
-                    if (stops == null || stops.isEmpty()) {
-                        System.err.println("WARN: No stops found for bus " + booking.getBus().getId());
-                        continue;
-                    }
-                    
-                    // Set fromStopName if not already set
-                    if (booking.getFromStopName() == null) {
-                        String fromStopName = stops.stream()
-                            .filter(bs -> bs != null && bs.getSequenceOrder() != null && bs.getSequenceOrder().equals(booking.getFromSeq()))
-                            .findFirst()
-                            .map(bs -> {
-                                if (bs.getStop() == null) {
-                                    System.err.println("WARN: BusStop " + bs.getId() + " has no associated Stop");
-                                    return null;
-                                }
-                                return bs.getStop().getName();
-                            })
-                            .orElse("Stop " + booking.getFromSeq());
-                        
-                        if (fromStopName != null) {
-                            booking.setFromStopName(fromStopName);
-                        }
-                    }
-                    
-                    // Set toStopName if not already set
-                    if (booking.getToStopName() == null) {
-                        String toStopName = stops.stream()
-                            .filter(bs -> bs != null && bs.getSequenceOrder() != null && bs.getSequenceOrder().equals(booking.getToSeq()))
-                            .findFirst()
-                            .map(bs -> {
-                                if (bs.getStop() == null) {
-                                    System.err.println("WARN: BusStop " + bs.getId() + " has no associated Stop");
-                                    return null;
-                                }
-                                return bs.getStop().getName();
-                            })
-                            .orElse("Stop " + booking.getToSeq());
-                        
-                        if (toStopName != null) {
-                            booking.setToStopName(toStopName);
-                        }
-                    }
+                    // Convert to DTO using the constructor that handles mapping
+                    results.add(new com.busreservation.dto.BookingResponseDTO(booking, stops));
                     
                 } catch (Exception e) {
-                    System.err.println("ERROR processing booking " + (booking != null ? booking.getId() : "null") + ": " + e.getMessage());
-                    e.printStackTrace();
-                    // Continue with next booking
+                    System.err.println("ERROR mapping booking " + booking.getId() + " to DTO: " + e.getMessage());
+                    // Skip this booking but continue with others
                 }
             }
             
-            // Filter out any null bookings and return
-            return bookings.stream()
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+            return results;
                     
         } catch (Exception e) {
             System.err.println("Error retrieving user bookings: " + e.getMessage());
-            throw new RuntimeException("Failed to retrieve bookings. Please try again later.", e);
+            throw new RuntimeException("Failed to retrieve bookings.", e);
         }
     }
     

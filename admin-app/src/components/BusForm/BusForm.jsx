@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../utils/api';
+import { BsPencilSquare, BsBusFrontFill, BsStars, BsCalendarEvent, BsGeoAltFill, BsPlusCircleFill } from 'react-icons/bs';
 import './BusForm.css';
 
 const BusForm = () => {
@@ -119,7 +120,7 @@ const BusForm = () => {
       console.log('Sending transformed bus data:', JSON.stringify(transformedData, null, 2));
       const response = await api[method](endpoint, transformedData);
       console.log('Bus creation/update successful:', response.data);
-      navigate('/buses');
+      navigate('/admin/buses');
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to save bus');
       console.error('Error saving bus:', err);
@@ -132,17 +133,20 @@ const BusForm = () => {
   return (
     <div className="bus-form-container">
       <div className="bus-form-header">
-        <h1>{isEdit ? 'Edit Bus' : 'Add New Bus'}</h1>
+        <div className="header-title">
+          <h1>{isEdit ? <><BsPencilSquare className="icon-mr"/> Edit Bus Fleet</> : <><BsBusFrontFill className="icon-mr"/> Add New Bus</>}</h1>
+          <p className="bus-form-subtitle">Define routes, schedules, and fleet details for your service.</p>
+        </div>
       </div>
 
-      {error && <div className="error-message">{error}</div>}
+      {error && <div className="error">{error}</div>}
 
       <form onSubmit={handleSubmit} className="bus-form">
+        <div className="form-section-title"><BsStars className="icon-mr"/> Basic Information</div>
         <div className="form-group">
-          <label htmlFor="name">Bus Name</label>
+          <label>Bus Name</label>
           <input
             type="text"
-            id="name"
             name="name"
             value={formData.name}
             onChange={handleChange}
@@ -153,15 +157,14 @@ const BusForm = () => {
 
         <div className="form-row">
           <div className="form-group">
-            <label htmlFor="type">Bus Type</label>
+            <label>Bus Type</label>
             <select
-              id="type"
               name="type"
               value={formData.type}
               onChange={handleChange}
               required
             >
-              <option value="">Select Bus Type</option>
+              <option value="">Select Type</option>
               <option value="AC_SLEEPER">AC Sleeper</option>
               <option value="NON_AC_SLEEPER">Non-AC Sleeper</option>
               <option value="AC_SEATER">AC Seater</option>
@@ -170,10 +173,9 @@ const BusForm = () => {
           </div>
 
           <div className="form-group">
-            <label htmlFor="operatorName">Operator Name</label>
+            <label>Operator</label>
             <input
               type="text"
-              id="operatorName"
               name="operatorName"
               value={formData.operatorName}
               onChange={handleChange}
@@ -184,126 +186,89 @@ const BusForm = () => {
         </div>
 
         <div className="form-group">
-          <label htmlFor="capacity">Capacity</label>
+          <label>Capacity (Seats)</label>
           <input
             type="number"
-            id="capacity"
             name="capacity"
             value={formData.capacity}
             onChange={handleChange}
             required
             min="1"
             max="60"
-            placeholder="e.g., 45"
           />
         </div>
 
-        <div className="form-group schedule-days-section">
-          <label>Operating Days</label>
+        <div className="form-section-title"><BsCalendarEvent className="icon-mr"/> Operation Schedule</div>
+        <div className="form-group">
           <div className="schedule-days">
             {['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'].map(day => (
-              <label key={day} className="day-checkbox">
+              <label key={day} className={`day-checkbox ${formData.scheduleDays.includes(day) ? 'active' : ''}`}>
                 <input
                   type="checkbox"
                   checked={formData.scheduleDays.includes(day)}
                   onChange={(e) => {
                     if (e.target.checked) {
-                      setFormData(prev => ({
-                        ...prev,
-                        scheduleDays: [...prev.scheduleDays, day]
-                      }));
+                      setFormData(prev => ({ ...prev, scheduleDays: [...prev.scheduleDays, day] }));
                     } else {
-                      setFormData(prev => ({
-                        ...prev,
-                        scheduleDays: prev.scheduleDays.filter(d => d !== day)
-                      }));
+                      setFormData(prev => ({ ...prev, scheduleDays: prev.scheduleDays.filter(d => d !== day) }));
                     }
                   }}
                 />
-                <span className="day-label">{day.charAt(0) + day.slice(1).toLowerCase()}</span>
+                {day.charAt(0) + day.slice(1, 3).toLowerCase()}
               </label>
             ))}
           </div>
-          <small className="form-help">Select the days when this bus operates</small>
         </div>
 
-        <div className="stops-section">
-          <h3>Bus Stops</h3>
+        <div className="form-section-title"><BsGeoAltFill className="icon-mr"/> Route & Pricing</div>
+        <div className="stops-container">
           {formData.stops.map((stop, index) => (
-            <div key={index} className="stop-form">
-              <div className="stop-header">
-                <h4>Stop {index + 1}</h4>
-                {formData.stops.length > 2 && (
-                  <button 
-                    type="button" 
-                    onClick={() => removeStop(index)}
-                    className="btn-remove"
-                  >
-                    Remove
-                  </button>
-                )}
-              </div>
-              
+            <div key={index} className="stop-entry">
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor={`stop-name-${index}`}>Stop Name</label>
+                  <label>Stop {index + 1}</label>
                   <input
                     type="text"
-                    id={`stop-name-${index}`}
                     value={stop.stopName}
                     onChange={(e) => handleStopChange(index, 'stopName', e.target.value)}
                     required
-                    placeholder="e.g., Bangalore"
+                    placeholder="City name"
                   />
                 </div>
-                
                 <div className="form-group">
-                  <label htmlFor={`arrival-time-${index}`}>Arrival Time</label>
+                  <label>Arrival</label>
                   <input
                     type="time"
-                    id={`arrival-time-${index}`}
                     value={stop.arrivalTime}
                     onChange={(e) => handleStopChange(index, 'arrivalTime', e.target.value)}
                     required
                   />
                 </div>
-                
-                <div className="form-group">
-                  <label htmlFor={`price-${index}`}>Price from Previous Stop</label>
-                  <input
-                    type="number"
-                    id={`price-${index}`}
-                    value={stop.priceFromPrev}
-                    onChange={(e) => handleStopChange(index, 'priceFromPrev', parseFloat(e.target.value) || 0)}
-                    required
-                    min="0"
-                    step="0.01"
-                    placeholder="0.00"
-                  />
-                </div>
+                {index > 0 && (
+                  <div className="form-group">
+                    <label>Price from Prev</label>
+                    <input
+                      type="number"
+                      value={stop.priceFromPrev}
+                      onChange={(e) => handleStopChange(index, 'priceFromPrev', parseFloat(e.target.value) || 0)}
+                      required
+                    />
+                  </div>
+                )}
               </div>
             </div>
           ))}
-          
-          <button type="button" onClick={addStop} className="btn-add-stop">
-            Add Stop
+          <button type="button" onClick={addStop} className="btn-edit" style={{marginBottom: '2rem'}}>
+            <BsPlusCircleFill className="icon-mr"/> Add Route Stop
           </button>
         </div>
 
         <div className="form-actions">
-          <button
-            type="button"
-            onClick={() => navigate('/buses')}
-            className="btn btn-secondary"
-          >
+          <button type="button" onClick={() => navigate('/admin/buses')} className="btn btn-cancel">
             Cancel
           </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn btn-primary"
-          >
-            {loading ? 'Saving...' : (isEdit ? 'Update Bus' : 'Create Bus')}
+          <button type="submit" disabled={loading} className="btn btn-submit">
+            {loading ? 'Processing...' : (isEdit ? 'Update Fleet' : 'Create Fleet')}
           </button>
         </div>
       </form>

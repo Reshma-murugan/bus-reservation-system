@@ -110,7 +110,6 @@ const Payment = () => {
         
         {/* Booking Summary */}
         <div className="booking-summary">
-          <h3>Booking Summary</h3>
           <div className="summary-details">
             <div className="detail-row">
               <span>Bus:</span>
@@ -144,15 +143,8 @@ const Payment = () => {
         </div>
 
         {/* Simple Payment Section */}
-        <div className="payment-section">
-          <h3>Payment</h3>
-          <div className="payment-info">
-            <p>This is a demo payment system. Click the button below to confirm your booking.</p>
-            <div className="total-display">
-              <span className="total-label">Total Amount:</span>
-              <span className="total-amount">₹{totalPrice}</span>
-            </div>
-          </div>
+        <div className="payment-info">
+          <p>This is a demo payment system. Confirm your booking and pay <strong>₹{totalPrice}</strong>.</p>
         </div>
 
         {error && <div className="error-message">{error}</div>}

@@ -4,14 +4,24 @@ import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
 import './BusDetails.css';
 
-const BusDetails = () => {
-  const { busId } = useParams();
+// Sub-components
+import BusInfoCard from './BusInfoCard';
+import SeatMap from './SeatMap';
+import BookingSummary from './BookingSummary';
+import { BookingConfirmationModal, SuccessModal } from './BookingModals';
+
+const BusDetails = ({ isEmbedded, bus: propBus, date: propDate }) => {
+  const { busId: pathBusId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuth();
   
-  const { bus: busFromState, searchParams, date } = location.state || {};
-  
+  // Use props if available (embedded mode), otherwise use location state (page mode)
+  const { bus: stateBus, date: stateDate } = location.state || {};
+  const busFromState = propBus || stateBus;
+  const date = propDate || stateDate;
+  const busId = pathBusId || busFromState?.busId;
+
   const [seatAvailability, setSeatAvailability] = useState([]);
   const [selectedSeats, setSelectedSeats] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -20,48 +30,13 @@ const BusDetails = () => {
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [bookingSuccess, setBookingSuccess] = useState(false);
 
-  // Debug logging
   useEffect(() => {
-    console.log('BusDetails Debug:', {
-      busId,
-      busFromState,
-      date,
-      searchParams
-    });
-    
-    console.log('Bus totalPrice:', busFromState?.totalPrice);
-    console.log('Bus totalPrice type:', typeof busFromState?.totalPrice);
-    console.log('Full bus object:', busFromState);
-    
-    if (busFromState?.totalPrice === undefined || busFromState?.totalPrice === null) {
-      console.error('WARNING: Bus totalPrice is missing or null!');
-    }
-    if (busFromState?.totalPrice === 0) {
-      console.error('WARNING: Bus totalPrice is 0 - this indicates database issue or missing fare data!');
-    }
-    
-    // Additional debugging for props passed from Results
-    console.log('Location state passed to BusDetails:', location.state);
-  }, [busId, busFromState, date, searchParams, location.state]);
-
-  useEffect(() => {
-    console.log('BusDetails - busId:', busId);
-    console.log('BusDetails - date:', date);
-    console.log('BusDetails - busFromState:', busFromState);
-    
-    if (busId && date && busFromState) {
+    if (busId && date) {
       fetchSeatAvailability();
     }
-  }, [busId, date, busFromState]);
+  }, [busId, date]);
 
   const fetchSeatAvailability = async () => {
-    const finalBusId = busId || busFromState?.busId;
-    
-    if (!finalBusId) {
-      setError('Bus ID not available');
-      return;
-    }
-
     setLoading(true);
     setError('');
     
@@ -69,32 +44,13 @@ const BusDetails = () => {
       const fromSeq = busFromState?.fromSeq || 1;
       const toSeq = busFromState?.toSeq || 3;
       
-      console.log('Fetching seats for:', {
-        finalBusId,
-        date,
-        fromSeq,
-        toSeq,
-        busFromState
+      const response = await api.get(`/user/buses/${busId}/seats`, {
+        params: { date, fromSeq, toSeq }
       });
-      
-      const response = await api.get(`/user/buses/${finalBusId}/seats`, {
-        params: { 
-          date,
-          fromSeq,
-          toSeq
-        }
-      });
-      
-      console.log('Seat availability response:', response.data);
       setSeatAvailability(response.data || []);
     } catch (err) {
       setError('Failed to load seat information');
       console.error('Seat availability error:', err);
-      console.error('Error details:', {
-        message: err.message,
-        response: err.response?.data,
-        status: err.response?.status
-      });
     } finally {
       setLoading(false);
     }
@@ -111,48 +67,9 @@ const BusDetails = () => {
     });
   };
 
-  const handleBookSeats = async () => {
-    if (selectedSeats.length === 0) return;
-    
-    const finalBusId = busId || busFromState?.busId;
-    
-    if (!finalBusId) {
-      setError('Bus ID not available for booking');
-      return;
-    }
-
-    setLoading(true);
-    setError('');
-    
-    try {
-      const token = localStorage.getItem('userToken');
-      const response = await api.post('/user/book', {
-        busId: finalBusId,
-        date,
-        fromStopSeq: busFromState?.fromSeq,
-        toStopSeq: busFromState?.toSeq,
-        seats: selectedSeats
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      alert('Booking successful!');
-      setSelectedSeats([]);
-      fetchSeatAvailability();
-    } catch (err) {
-      setError('Booking failed');
-      console.error('Booking error:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleConfirmBooking = async () => {
     if (selectedSeats.length === 0) return;
-    
-    const finalBusId = busId || busFromState?.busId;
-    
-    if (!finalBusId) {
+    if (!busId) {
       setError('Bus ID not available for booking');
       return;
     }
@@ -162,8 +79,8 @@ const BusDetails = () => {
     
     try {
       const token = localStorage.getItem('userToken');
-      const response = await api.post('/user/book', {
-        busId: finalBusId,
+      await api.post('/user/book', {
+        busId: busId,
         journeyDate: date,
         fromSeq: busFromState?.fromSeq,
         toSeq: busFromState?.toSeq,
@@ -172,14 +89,10 @@ const BusDetails = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Close booking modal and show success
       setShowBookingModal(false);
       setBookingSuccess(true);
-      
-      // Reset selected seats and refresh availability
       setSelectedSeats([]);
       fetchSeatAvailability();
-      
     } catch (err) {
       setError('Booking failed: ' + (err.response?.data?.message || err.message));
       console.error('Booking error:', err);
@@ -188,9 +101,9 @@ const BusDetails = () => {
     }
   };
 
-  const totalPrice = selectedSeats.length * (busFromState?.totalPrice || 250); // Default ₹250 if no price
+  const totalPrice = selectedSeats.length * (busFromState?.totalPrice || 250);
 
-  if (!busFromState) {
+  if (!busFromState && !isEmbedded) {
     return (
       <div className="bus-details">
         <p>Bus information not available. Please go back and search again.</p>
@@ -200,103 +113,48 @@ const BusDetails = () => {
   }
 
   return (
-    <div className="bus-details">
-      <div className="bus-details-header">
-        <button onClick={() => navigate(-1)} className="back-btn">
-          ← Back to Results
-        </button>
-        <h2>Bus Details & Seat Selection</h2>
-      </div>
+    <div className={`bus-details ${isEmbedded ? 'embedded' : ''}`}>
+      {!isEmbedded && (
+        <div className="bus-details-header">
+          <button onClick={() => navigate(-1)} className="back-btn">
+            ← Back to Results
+          </button>
+          <h2>Bus Details & Seat Selection</h2>
+        </div>
+      )}
 
-      <div className="bus-info-card">
-        <h3>{busFromState.busName}</h3>
-        <div className="bus-meta">
-          <span className="bus-type">{busFromState.busType}</span>
-          <span className="operator">{busFromState.operatorName}</span>
-        </div>
-        <div className="journey-details">
-          <div className="time-detail">
-            <span>Departure: {busFromState.departureTime}</span>
-            <span>Arrival: {busFromState.arrivalTime}</span>
-          </div>
-          <div className="price-detail">
-            <span>Fare per seat: ₹{busFromState?.totalPrice || 250}</span>
-          </div>
-        </div>
-      </div>
+      {!isEmbedded && <BusInfoCard bus={busFromState} />}
 
       {error && <div className="error-message">{error}</div>}
 
-      <div className="seat-selection">
-        <h3>Select Seats</h3>
-        {loading ? (
-          <div className="loading-state">
-            <div className="spinner"></div>
-            <p>Loading seat information...</p>
-          </div>
-        ) : error ? (
-          <div className="error-state">
-            <p>{error}</p>
-            <button onClick={fetchSeatAvailability} className="retry-btn">
-              Retry
-            </button>
-          </div>
-        ) : (
-          <div className="seat-map">
-            {seatAvailability.length > 0 ? (
-              <>
-                <div className="seats-grid">
-                  {seatAvailability.map(seat => (
-                    <button
-                      key={seat.seatId}
-                      className={`seat ${seat.available ? 'available' : 'booked'} ${
-                        selectedSeats.some(s => s.seatId === seat.seatId) ? 'selected' : ''
-                      }`}
-                      onClick={() => seat.available && handleSeatSelection(seat)}
-                      disabled={!seat.available}
-                    >
-                      {seat.seatNumber}
-                    </button>
-                  ))}
-                </div>
-                
-                <div className="seat-legend">
-                  <div className="legend-item">
-                    <div className="seat available"></div>
-                    <span>Available</span>
-                  </div>
-                  <div className="legend-item">
-                    <div className="seat selected"></div>
-                    <span>Selected</span>
-                  </div>
-                  <div className="legend-item">
-                    <div className="seat booked"></div>
-                    <span>Booked</span>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="no-seats">
-                <p>No seat information available for this route</p>
-                <button onClick={fetchSeatAvailability} className="retry-btn">
-                  Refresh
-                </button>
+      <div className="bus-details-split">
+        <div className="seat-selection-col">
+          <div className="seat-selection">
+            {isEmbedded ? (
+              <div className="embedded-selection-header">
+                <h3>Select Your Seats</h3>
+                <span className="price-info">₹{busFromState?.totalPrice || 250} / seat</span>
               </div>
+            ) : (
+              <h3>Select Seats</h3>
             )}
+            <SeatMap 
+              loading={loading}
+              error={error}
+              seatAvailability={seatAvailability}
+              selectedSeats={selectedSeats}
+              onSeatSelection={handleSeatSelection}
+              onRetry={fetchSeatAvailability}
+            />
           </div>
-        )}
-      </div>
+        </div>
 
-      {selectedSeats.length > 0 && (
-        <div className="booking-summary">
-          <h3>Booking Summary</h3>
-          <div className="summary-details">
-            <p>Selected Seats: {selectedSeats.map(seat => seat.seatNumber).join(', ')}</p>
-            <p>Number of Seats: {selectedSeats.length}</p>
-            <p className="total-price">Total Amount: ₹{totalPrice}</p>
-          </div>
-          <button 
-            onClick={() => {
+        <div className="booking-summary-col">
+          <BookingSummary 
+            selectedSeats={selectedSeats}
+            totalPrice={totalPrice}
+            loading={bookingLoading}
+            onProceed={() => {
               if (!isAuthenticated()) {
                 navigate('/login');
                 return;
@@ -311,116 +169,33 @@ const BusDetails = () => {
                   toSeq: busFromState?.toSeq
                 }
               });
-            }} 
-            className="book-button"
-            disabled={bookingLoading}
-          >
-            Proceed to Payment
-          </button>
+            }}
+          />
         </div>
-      )}
+      </div>
 
-      {/* Booking Confirmation Modal */}
-      {showBookingModal && (
-        <div className="booking-modal-overlay">
-          <div className="booking-modal">
-            <div className="modal-header">
-              <h3>Confirm Your Booking</h3>
-              <button 
-                className="close-modal" 
-                onClick={() => setShowBookingModal(false)}
-              >
-                ×
-              </button>
-            </div>
-            
-            <div className="modal-content">
-              <div className="trip-details">
-                <h4>Trip Details</h4>
-                <div className="detail-row">
-                  <span>Bus:</span>
-                  <span>{busFromState?.busName || 'N/A'}</span>
-                </div>
-                <div className="detail-row">
-                  <span>Route:</span>
-                  <span>{busFromState?.fromStop} → {busFromState?.toStop}</span>
-                </div>
-                <div className="detail-row">
-                  <span>Date:</span>
-                  <span>{date}</span>
-                </div>
-                <div className="detail-row">
-                  <span>Selected Seats:</span>
-                  <span>{selectedSeats.map(seat => seat.seatNumber).join(', ')}</span>
-                </div>
-              </div>
+      <BookingConfirmationModal 
+        show={showBookingModal}
+        onClose={() => setShowBookingModal(false)}
+        onConfirm={handleConfirmBooking}
+        loading={bookingLoading}
+        bus={busFromState}
+        date={date}
+        selectedSeats={selectedSeats}
+        totalPrice={totalPrice}
+      />
 
-              <div className="fare-breakdown">
-                <h4>Fare Details</h4>
-                <div className="detail-row">
-                  <span>Fare per seat:</span>
-                  <span>₹{busFromState?.totalPrice || 0}</span>
-                </div>
-                <div className="detail-row">
-                  <span>Number of seats:</span>
-                  <span>{selectedSeats.length}</span>
-                </div>
-                <div className="detail-row total-row">
-                  <span><strong>Total Amount:</strong></span>
-                  <span><strong>₹{totalPrice}</strong></span>
-                </div>
-              </div>
-            </div>
-
-            <div className="modal-actions">
-              <button 
-                className="cancel-btn" 
-                onClick={() => setShowBookingModal(false)}
-              >
-                Cancel
-              </button>
-              <button 
-                className="confirm-booking-btn" 
-                onClick={handleConfirmBooking}
-                disabled={bookingLoading}
-              >
-                {bookingLoading ? 'Processing...' : 'Pay & Confirm'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Success Modal */}
-      {bookingSuccess && (
-        <div className="booking-modal-overlay">
-          <div className="booking-modal success-modal">
-            <div className="modal-content">
-              <div className="success-icon">✓</div>
-              <h3>Booking Confirmed!</h3>
-              <p>Your seats have been successfully booked.</p>
-              <p>Booking ID: #BK{Date.now()}</p>
-              <div className="success-actions">
-                <button 
-                  className="view-bookings-btn"
-                  onClick={() => navigate('/bookings')}
-                >
-                  View My Bookings
-                </button>
-                <button 
-                  className="book-another-btn"
-                  onClick={() => {
-                    setBookingSuccess(false);
-                    navigate('/search');
-                  }}
-                >
-                  Book Another Trip
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <SuccessModal 
+        show={bookingSuccess}
+        bookingId={Date.now()}
+        onViewBookings={() => navigate('/bookings')}
+        onBookAnother={() => {
+          setBookingSuccess(false);
+          // In embedded mode, maybe just collapse? 
+          // For now navigate to search is fine as per original logic.
+          navigate('/search');
+        }}
+      />
     </div>
   );
 };

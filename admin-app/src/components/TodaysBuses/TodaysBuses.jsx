@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../../utils/api';
+import { formatTimeTo12h } from '../../utils/dateUtils';
+import { BsArrowRight, BsPlusLg } from 'react-icons/bs';
 import './TodaysBuses.css';
 
 function TodaysBuses() {
@@ -93,7 +95,7 @@ function TodaysBuses() {
         <div className="route-details">
           <div className="route-header">
             <span className="route-origin">{origin}</span>
-            <span className="route-arrow">→</span>
+            <span className="route-arrow" style={{margin: '0 10px'}}><BsArrowRight /></span>
             <span className="route-destination">{destination}</span>
           </div>
           <div className="stops-list">
@@ -117,7 +119,7 @@ function TodaysBuses() {
                       {index === sortedStops.length - 1 && <div className="stop-sequence">(Destination)</div>}
                     </td>
                     <td>
-                      {stop.arrivalTime ? new Date(`1970-01-01T${stop.arrivalTime}`).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'N/A'}
+                      {formatTimeTo12h(stop.arrivalTime)}
                     </td>
                     <td>
                       {stop.cumulativeFare ? `₹${parseFloat(stop.cumulativeFare).toFixed(2)}` : 'N/A'}
@@ -151,7 +153,7 @@ function TodaysBuses() {
         <div className="route-ends">
           <span className="route-origin">{origin}</span>
         </div>
-        <div className="route-arrow">→</div>
+        <div className="route-arrow" style={{margin: '0 10px'}}><BsArrowRight /></div>
         <div className="route-ends">
           <span className="route-destination">{destination}</span>
         </div>
@@ -166,10 +168,12 @@ function TodaysBuses() {
   return (
     <div className="todays-buses">
       <div className="page-header">
-        <h1>Today's Buses</h1>
-        <p className="date-info">Running on {formattedDate}</p>
-        <button onClick={fetchTodaysBuses} className="refresh-btn">
-          Refresh
+        <div className="header-title">
+          <h1>Today's Active Fleet</h1>
+          <p className="date-info">Live monitoring for {formattedDate}</p>
+        </div>
+        <button onClick={fetchTodaysBuses} className="btn btn-secondary">
+          Refresh Live Status
         </button>
       </div>
 
@@ -182,22 +186,22 @@ function TodaysBuses() {
         </div>
       )}
 
-      <div className="buses-summary">
+      <div className="summary-grid">
         <div className="summary-card">
-          <h3>Total Buses Running</h3>
+          <h3>Buses on Road</h3>
           <div className="stat-number">{todaysBuses.length}</div>
         </div>
         <div className="summary-card">
-          <h3>For</h3>
-          <div className="stat-number">{formattedDate.split(',')[0]}</div>
+          <h3>Today's Schedule</h3>
+          <div className="stat-number" style={{fontSize: '1.5rem'}}>{formattedDate}</div>
         </div>
       </div>
 
       {todaysBuses.length === 0 ? (
         <div className="no-data">
           <p>No buses are scheduled to run today.</p>
-          <Link to="/buses/new" className="add-bus-btn">
-            Add New Bus
+          <Link to="/admin/buses/new" className="btn btn-primary" style={{display: 'inline-flex', alignItems: 'center', gap: '8px'}}>
+            <BsPlusLg /> Add New Bus Fleet
           </Link>
         </div>
       ) : (
@@ -209,47 +213,54 @@ function TodaysBuses() {
               onClick={() => toggleBusDetails(bus.id)}
             >
               <div className="bus-header">
-                <div>
-                  <h3>{bus.name} <span className="bus-type">{bus.type ? bus.type.replace('_', ' ') : 'Standard'}</span></h3>
-                  <div className="bus-meta">
-                    <span className="bus-seats">
-                      <i className="fas fa-chair"></i> {bus.capacity || 19} seats
-                    </span>
-                  </div>
+                <div className="bus-name-group">
+                  <h3>{bus.name}</h3>
+                  <span className="bus-type">{bus.type ? bus.type.replace('_', ' ') : 'Standard'}</span>
                 </div>
-                <button 
-                  className="expand-btn"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleBusDetails(bus.id);
-                  }}
-                >
-                  {expandedBusId === bus.id ? '▲' : '▼'}
-                </button>
+                <div className="meta-item">
+                  <span className="meta-label">Capacity</span>
+                  <span className="meta-value">{bus.capacity || 19} Seats</span>
+                </div>
               </div>
               
-              <div className="route-summary-container">
-                {formatRouteSummary(bus)}
+              <div className="route-strip">
+                <div className="route-point">
+                  <span className="point-city">{bus.busStops?.[0]?.stop?.name || 'Origin'}</span>
+                  <span className="point-time">{formatTimeTo12h(bus.busStops?.[0]?.arrivalTime)}</span>
+                </div>
+                <div className="route-arrow" style={{display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)'}}>
+                  <span>──────────</span>
+                  <BsArrowRight />
+                </div>
+                <div className="route-point" style={{textAlign: 'right'}}>
+                  <span className="point-city">{bus.busStops?.slice(-1)[0]?.stop?.name || 'Dest.'}</span>
+                  <span className="point-time">{formatTimeTo12h(bus.busStops?.slice(-1)[0]?.arrivalTime)}</span>
+                </div>
               </div>
               
               {expandedBusId === bus.id && (
                 <div className="expanded-details">
-                  {formatRouteDetails(bus)}
-                  <div className="bus-actions">
-                    <Link 
-                      to={`/admin/buses/edit/${bus.id}`} 
-                      className="action-btn edit-btn"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      Edit Bus
-                    </Link>
-                    <Link 
-                      to={`/admin/buses/${bus.id}`} 
-                      className="action-btn view-btn"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      View Full Details
-                    </Link>
+                   <table className="stops-table">
+                    <thead>
+                      <tr>
+                        <th>Stop</th>
+                        <th>Arrival</th>
+                        <th>Fare</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bus.busStops?.sort((a,b) => a.sequenceOrder - b.sequenceOrder).map((stop, idx) => (
+                        <tr key={idx}>
+                          <td>{stop.stop?.name}</td>
+                          <td>{formatTimeTo12h(stop.arrivalTime)}</td>
+                          <td>₹{stop.cumulativeFare}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <div className="bus-actions" style={{marginTop: '1.5rem', display: 'flex', gap: '1rem'}}>
+                    <Link to={`/admin/buses/${bus.id}/edit`} className="btn-edit" onClick={e => e.stopPropagation()}>Manage Bus</Link>
+                    <Link to={`/admin/buses/${bus.id}`} className="btn-view" onClick={e => e.stopPropagation()}>View Analytics</Link>
                   </div>
                 </div>
               )}

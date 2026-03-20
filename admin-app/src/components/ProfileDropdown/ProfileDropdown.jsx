@@ -56,30 +56,37 @@ const ProfileDropdown = ({ userEmail }) => {
         aria-haspopup="true"
       >
         <span className="user-avatar">
-          {userEmail ? userEmail.charAt(0).toUpperCase() : 'U'}
+          {userEmail ? userEmail.charAt(0).toUpperCase() : 'A'}
         </span>
-        <span className="user-email">{userEmail || 'User'}</span>
-        <span className={`dropdown-arrow ${isOpen ? 'up' : 'down'}`}>▼</span>
+        <span className="user-email">{userEmail?.split('@')[0] || 'Admin'}</span>
       </button>
       
       {isOpen && (
         <div className="dropdown-menu" role="menu">
           <div className="dropdown-header">
-            <div className="user-avatar large">
+            <div className="user-avatar">
               {userEmail ? userEmail.charAt(0).toUpperCase() : 'A'}
             </div>
-            <div className="user-info">
-              <div className="user-email">{userEmail || 'admin@example.com'}</div>
-              <div className="user-role">Administrator</div>
+            <div className="dropdown-info">
+              <span className="dropdown-email">{userEmail || 'admin@busbook.com'}</span>
+              <span className="dropdown-role">System Administrator</span>
             </div>
           </div>
-          <div className="dropdown-divider"></div>
-          <button 
-            className="dropdown-item"
-            onClick={handleLogout}
-          >
-            <span className="icon">🚪</span> Logout
-          </button>
+          
+          <div className="dropdown-content">
+            <button className="dropdown-item">
+              <i className="bi bi-person-badge"></i> View Profile
+            </button>
+            <button className="dropdown-item">
+              <i className="bi bi-shield-lock"></i> Security settings
+            </button>
+            <button 
+              className="dropdown-item logout"
+              onClick={handleLogout}
+            >
+              <i className="bi bi-box-arrow-right"></i> Sign Out Portal
+            </button>
+          </div>
         </div>
       )}
     </div>

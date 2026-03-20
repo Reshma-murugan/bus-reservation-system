@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Navbar from './components/Navbar/Navbar';
-import AdminLogin from './components/auth/Login';
+import AdminLogin from './components/Login/Login';
 import Signup from './components/Signup/Signup';
 import Dashboard from './components/Dashboard/Dashboard';
 import Buses from './components/Buses/Buses';
@@ -10,7 +10,6 @@ import BusForm from './components/BusForm/BusForm';
 import Bookings from './components/Bookings/Bookings';
 import TodaysBuses from './components/TodaysBuses/TodaysBuses';
 import './App.css';
-import './components/auth/Auth.css';
 
 const AdminProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -25,11 +24,12 @@ const AdminProtectedRoute = ({ children }) => {
 
 const AppContent = () => {
   const { isAuthenticated } = useAuth();
+  const isAuth = isAuthenticated();
 
   return (
-    <div className="app">
-      {isAuthenticated() && <Navbar />}
-      <main className={`main-content ${isAuthenticated() ? 'with-navbar' : ''}`}>
+    <div className={`app ${!isAuth ? 'auth-app' : ''}`}>
+      {isAuth && <Navbar />}
+      <main className={isAuth ? "main-content" : "auth-content"}>
         <Routes>
           <Route 
             path="/admin/login" 
